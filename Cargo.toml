@@ -1,0 +1,13 @@
+[package]
+name = "ferrograd"
+version = "0.1.0"
+edition = "2024"
+description = "From-scratch tape-based reverse-mode autodiff engine in Rust"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+smallvec = "1"   # SmallVec<[NodeId; 2]> for Node.inputs (most ops have <= 2 inputs)
+rand = "0.8"     # parameter init (A2) and random test points for grad checks
+rayon = "1.10"   # data-parallel matmul/conv, below the graph layer (A1+)
+
+# Phase B (add when needed): criterion (benches), pyo3 + numpy (Python bindings)
