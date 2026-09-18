@@ -8,8 +8,10 @@ fn main() {
     assert_eq!(&bytes[..8], b"\x93NUMPY\x01\0");
     let offset = 10 + u16::from_le_bytes([bytes[8], bytes[9]]) as usize;
     let scores: Vec<f64> = bytes[offset..]
-        .chunks_exact(8)
-        .map(|chunk| f64::from_le_bytes(chunk.try_into().unwrap()))
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|chunk| f64::from_le_bytes(*chunk))
         .collect();
     assert_eq!(scores.len(), 100 * 26);
     let (runs, tasks, reps) = (100, 26, 50_000);

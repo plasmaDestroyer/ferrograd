@@ -67,6 +67,13 @@ and `rliable`, `arch`, SciPy, and pandas absent. This verifies runtime
 independence from the reference stack; cross-platform wheels are checked by
 the wheel workflow, not by this local Linux benchmark.
 
+The [coverage sanity check](results/package-coverage.json) used 100
+standard-normal 5×26 trials (seed 1107, 2,000 bootstrap repetitions).
+Nominal 95% intervals covered the population IQM in 85/100 rliable trials
+and 86/100 Ferrograd trials; mean widths were 0.336213 and 0.337032.
+Both coverage counts are below 95/100. This small comparison does not
+establish calibrated coverage or a general guarantee.
+
 Reproduce the final-package matrix with the same installed wheel and pinned
 reference environment:
 
