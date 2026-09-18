@@ -1,0 +1,63 @@
+{
+  "python": "3.12.14 (main, Sep  1 2026, 14:16:52) [Clang 22.1.3 ]",
+  "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
+  "cpu": "\t: 12th Gen Intel(R) Core(TM) i9-12900H",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "versions": {
+    "numpy": "2.5.3",
+    "rliable": "1.2.0",
+    "arch": "7.2.0",
+    "scipy": "1.18.1",
+    "pandas": "2.3.3",
+    "ferrograd": "0.1.0"
+  },
+  "source_sha256": {
+    "benchmarks/run.py": "b5f037f9131cbfccdf8776a293c58d0fde622482b1a22fe0bf6f42ae675ff978",
+    "src/lib.rs": "e31bd7ca4ff5f9ca9477ccbd592a637c085bee6f2762c60f9dbb73d9f60e3512",
+    "Cargo.lock": "1cacee282976e72a899141cc15dd49df608dd978e0fca3885e41ff6f936e90f2",
+    "python/ferrograd/__init__.py": "a22936fd3a7944879d9596c6bae7f10f8436f9f235752c640918627b3b897059",
+    "benchmarks/data/atari_spr.npy": "8343c7ce757308399dfbd753ecfbab3e42eda9bb33b69bce891fb71fbcaac5d2"
+  },
+  "cpu_policy": [
+    4,
+    6,
+    0,
+    2,
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cpu_policy_description": "one logical CPU per physical core, descending maximum frequency then ascending CPU ID",
+  "power": {
+    "scaling_governor": "powersave",
+    "energy_performance_preference": "balance_performance"
+  }
+}

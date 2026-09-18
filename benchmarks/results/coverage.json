@@ -1,0 +1,20 @@
+{
+  "distribution": "standard normal",
+  "shape": [
+    5,
+    26
+  ],
+  "population_iqm": 0,
+  "seed": 1107,
+  "trials": 100,
+  "reps": 2000,
+  "confidence": 0.95,
+  "coverage": {
+    "rliable": 85,
+    "ferrograd": 86
+  },
+  "mean_width": {
+    "rliable": 0.3362131796766182,
+    "ferrograd": 0.3370324564340048
+  }
+}

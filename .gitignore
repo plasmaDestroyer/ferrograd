@@ -1,1 +1,9 @@
 /target
+/.venv-*/
+/.cache/
+__pycache__/
+*.py[cod]
+/python/ferrograd/*.so
+/python/ferrograd/*.pyd
+/benchmarks/results/*.lock
+!/SPEC.md

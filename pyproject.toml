@@ -1,0 +1,24 @@
+[build-system]
+requires = ["maturin>=1.15,<2"]
+build-backend = "maturin"
+
+[project]
+name = "ferrograd"
+version = "0.1.0"
+description = "Rust-backed statistics for reinforcement-learning benchmark scores"
+requires-python = ">=3.11,<3.15"
+dependencies = ["numpy>=2,<3"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Rust",
+]
+
+[tool.maturin]
+python-source = "python"
+module-name = "ferrograd._native"

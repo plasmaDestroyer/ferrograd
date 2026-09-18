@@ -1,0 +1,11 @@
+Ferrograd is available under either the MIT License or Apache License 2.0.
+See LICENSE-MIT and LICENSE-APACHE.
+
+benchmarks/data/SPR.json contains published Atari 100k results from the SPR
+project. Its two byte-identical source mirrors and checksum are documented in
+benchmarks/README.md. The underlying data belongs to its original authors.
+
+benchmarks/data/atari_100k_baselines.json contains random and human score
+baselines extracted from the rliable notebook by Google Research. rliable is
+licensed under Apache License 2.0. The notebook revision, extraction checksum,
+and source license link are documented in benchmarks/README.md.
