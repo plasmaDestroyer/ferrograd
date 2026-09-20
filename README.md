@@ -46,6 +46,9 @@ interval has shape `(2, number of points)`; its rows are the lower and upper
 percentile limits. `examples/plot_comparison.py` shows direct use with
 `rliable.plot_utils` when plotting is needed.
 
+For a complete real-data walkthrough, see [published Atari analysis](docs/atari-analysis/README.md)
+with reproducible results and plots from 100 SPR runs across 26 games.
+
 ## Statistics and boundaries
 
 - IQM flattens all run/task scores, trims `floor(n/4)` from each tail, and
