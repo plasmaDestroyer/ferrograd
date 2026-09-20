@@ -1,0 +1,68 @@
+{
+  "python": "3.12.14 (main, Sep  1 2026, 14:16:52) [Clang 22.1.3 ]",
+  "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
+  "cpu": "\t: 12th Gen Intel(R) Core(TM) i9-12900H",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "versions": {
+    "numpy": "2.5.3",
+    "rliable": "1.2.0",
+    "arch": "7.2.0",
+    "scipy": "1.18.1",
+    "pandas": "2.3.3",
+    "ferrograd": "0.1.0"
+  },
+  "source_sha256": {
+    "benchmarks/run.py": "a3f658ec7a824cc288aad73ff3e73900b132ea7412f4e2dfd76f41c73d6e333a",
+    "src/lib.rs": "84e1c5ecee2d52d481172dba7e27c34ff968e3f73bbd0c81bcf70c21b229fb7a",
+    "Cargo.lock": "797c6f34ff2187015646254e3feb6c8eee569d28533e83be3f038420bfaf8dbb",
+    "python/ferrograd/__init__.py": "3026e5a2ac982c32a8c8950158cbb80bb95d8752ba70ce936c6910e6927fa016",
+    "benchmarks/workflows.py": "f88a593e839064a9a37a9c0141310d6af72f518c466a8695e221fdb62d8c6d83",
+    "benchmarks/data/atari_spr.npy": "8343c7ce757308399dfbd753ecfbab3e42eda9bb33b69bce891fb71fbcaac5d2",
+    "benchmarks/data/DrQ(eps).json": "a86f9f4243b7eb3f994b6db4c9c87fb698742bfa08e7b06e414be41abf1f0574",
+    "benchmarks/data/IRIS.json": "40f45fc2b02e4830e90476ab41ada4251682d9ccc8edaa7b8e25f0ec51bafb5f",
+    "benchmarks/data/SPR.json": "055133e22ddb1e7154bbb48b6d229e3b064ea374911158f5d5c1a92cd59e2ad3",
+    "benchmarks/data/atari_100k_baselines.json": "8f8f34a7fb3ccd28d28cf8e7d35b24521b82ef606105ff31107d4ec685991523"
+  },
+  "cpu_policy": [
+    4,
+    6,
+    0,
+    2,
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cpu_policy_description": "one logical CPU per physical core, descending maximum frequency then ascending CPU ID",
+  "power": {
+    "scaling_governor": "powersave",
+    "energy_performance_preference": "balance_performance"
+  }
+}

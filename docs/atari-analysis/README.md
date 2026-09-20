@@ -1,75 +1,70 @@
-# Published Atari scores: SPR versus a fixed human reference
+# Published Atari 100k analysis
 
-This example runs Ferrograd on 100 published SPR runs for each of 26 Atari
-100k games. It checks all three public APIs, both profile definitions, and
-aggregate intervals with and without task resampling. No agents are trained.
+This walkthrough analyzes every published final score for SPR (100 runs),
+DrQ (epsilon, 100 runs), and IRIS (5 runs) on the same 26 Atari 100k tasks.
+No training or data download is required. The executable
+[notebook](../../examples/atari_analysis.ipynb) calls the reusable
+[script](../../examples/atari_analysis.py).
 
-Scores are normalized per game as `(score - random) / (human - random)`.
-Zero denotes the published random reference and one the published human
-reference. See [data provenance](../../benchmarks/README.md#published-data-provenance)
-for sources, hashes, and preprocessing. The raw files are already in the repo;
-this example requires no data download.
+Scores use `(score - random) / (human - random)`. The script requires exact
+task-set alignment, checks the 100/100/5 run counts, and retains all 5,330 raw
+scores. See [data provenance](../../benchmarks/data/PROVENANCE.md).
 
 ## Results
 
-Seed 7, 2,000 bootstrap repetitions, nominal 95% percentile intervals,
-one thread, and optimality-gap threshold 1:
+Seed 7, 2,000 bootstrap repetitions, nominal 95% percentile intervals, one
+thread, and optimality-gap threshold 1:
 
-| SPR statistic | Estimate | Interval, fixed game set | Interval, resampled games |
-|---|---:|---:|---:|
-| IQM | 0.3366 | [0.3259, 0.3481] | [0.1727, 0.6025] |
-| Mean | 0.6158 | [0.5972, 0.6346] | [0.3769, 0.9050] |
-| Median of game means | 0.3956 | [0.3629, 0.4185] | [0.1608, 0.6675] |
-| Optimality gap | 0.5773 | [0.5702, 0.5843] | [0.4434, 0.7021] |
+| Method | IQM | Mean | Median of task means | Optimality gap |
+|---|---:|---:|---:|---:|
+| SPR | 0.337 | 0.616 | 0.396 | 0.577 |
+| DrQ (epsilon) | 0.280 | 0.465 | 0.313 | 0.631 |
+| IRIS | 0.501 | 1.046 | 0.289 | 0.512 |
 
-The mean exceeds the IQM: high scores on some games raise the mean.
-Resampling games produces much wider intervals here. Fixed-game intervals
-measure run uncertainty on these 26 games; task bootstrap also reflects
-variation from resampling the game set. It does not establish performance
-on every possible game.
+IRIS has the highest IQM and mean. Its mean is much higher than its IQM and
+median, showing that the aggregate summaries respond differently to the
+observed skew. Lower optimality gap is better.
 
-SPR's improvement probability against the fixed human reference is **0.2142**
-with interval **[0.2054, 0.2238]**, averaging equally over games and awarding
-half-credit for ties. This is comparison with one published reference value
-per game, not a sampled population of human players. Human-reference
-uncertainty is unavailable and is not included. Its degenerate intervals
-in the plots follow from treating those values as constants.
+Primary intervals hold the named 26 tasks fixed and resample runs. They
+quantify bootstrap variation within these published runs. The recorded
+sensitivity analysis also resamples tasks; those intervals are much
+wider because performance varies strongly by game. IRIS has only five runs,
+so its run uncertainty is also wider. Run resampling reflects the variation
+represented by these published runs; it does not establish the behavior of a
+different training or evaluation protocol. Task resampling is a sensitivity
+analysis, not a claim about Atari tasks outside this published set.
 
-Profile bands are pointwise percentile intervals, not simultaneous confidence
-bands for the entire curve. The displayed threshold range is 0–3; scores
-outside this range are still included in every calculation. Nominal 95%
-intervals do not guarantee 95% empirical coverage; see the
-[coverage sanity check](../../benchmarks/PACKAGE_REPORT.md#scope-and-verification).
+Pairwise probabilities average taskwise run-pair comparisons; ties count
+half. They are **0.610** [0.577, 0.644] for IRIS over SPR, **0.688** [0.654,
+0.721] for IRIS over DrQ (epsilon), and **0.383** [0.369, 0.397] for DrQ
+(epsilon) over SPR. These answer a different question from aggregate ranks.
 
-## Plots
-
-Aggregate intervals below hold the game set fixed. Higher is better for
-IQM, mean, and median; lower is better for optimality gap.
+Profile bands are pointwise intervals. The individual-score profile weights
+every run/task value; the task-mean profile gives each task one thresholded
+mean. The displayed 0-3 range does not clip calculations.
 
 ![Aggregate estimates](metrics.png)
 
-![Run/game score profiles](profiles.png)
+![Individual-score profiles](profiles.png)
 
-![Game-mean profiles](task-mean-profiles.png)
+![Task-mean profiles](task-mean-profiles.png)
 
-![Probability of improvement](comparison.png)
+![Pairwise improvement probabilities](comparison.png)
 
-## Reproduce and verify
+## Reproduce
 
-With Ferrograd installed in the pinned Python 3.12 reference environment:
+Install a wheel downloaded from the matching CI wheel artifact, without
+assuming a package-index release:
 
 ```sh
-.venv-reference/bin/python examples/atari_analysis.py
+python -m venv .venv
+.venv/bin/python -m pip install path/to/ferrograd-0.1.0-*.whl numpy matplotlib
+.venv/bin/python examples/atari_analysis.py
 ```
 
-The script independently checks point estimates against NumPy and rliable,
-checks finite ordered interval bounds, and verifies normalization against the
-stored benchmark matrix. It writes [results.json](results.json) and four
-plots here. JSON includes input hashes, game order, bootstrap settings,
-full profile values, and interval endpoints.
+Use `--output DIR` to write the JSON and plots outside the tracked docs tree.
 
-The real-data run exposed presentation issues in the plotting defaults:
-cramped metric labels, absent profile legends, an incorrect label for
-profiles of game means, and a tightly zoomed probability axis. The example
-sets explicit spacing, labels, legends, and a 0–1 probability axis. No
-numerical API change was needed for this dataset.
+Or execute `examples/atari_analysis.ipynb` with a notebook runner using that
+environment. Matplotlib is used directly; rliable is optional. The script
+independently verifies every point estimate and writes [results.json](results.json),
+including hashes, task order, versions, settings, full values, and intervals.

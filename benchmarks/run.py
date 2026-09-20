@@ -18,6 +18,7 @@ for variable in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS',
     os.environ[variable] = '1'
 os.environ.setdefault('MPLCONFIGDIR', '/tmp/ferrograd-matplotlib')
 import numpy as np
+from workflows import ferrograd_workflow, numpy_workflow, rliable_workflow
 
 HERE = Path(__file__).resolve().parent
 
@@ -69,6 +70,43 @@ def load(case):
     return rng.standard_t(2, size=shape)
 
 
+def load_workflow(case):
+    if case in ("spr", "drq", "iris"):
+        filename = {"spr": "SPR.json", "drq": "DrQ(eps).json", "iris": "IRIS.json"}[case]
+        raw = json.loads((HERE / "data" / filename).read_text())
+        constants = json.loads((HERE / "data" / "atari_100k_baselines.json").read_text())
+        games = sorted(raw)
+        return np.stack([(np.asarray(raw[game], dtype=np.float64) - constants['RANDOM_SCORES'][game]) /
+                         (constants['HUMAN_SCORES'][game] - constants['RANDOM_SCORES'][game])
+                         for game in games], axis=1)
+    return load(case)
+
+
+def workflow_data(operation, case):
+    if operation == "workflow":
+        return {name: load_workflow(name) for name in ("spr", "drq", "iris")}
+    if operation != "compare":
+        return load_workflow(case)
+    left, right = case.split("-")
+    return load_workflow(left), load_workflow(right)
+
+
+def complete_workflow(name, data, **kwargs):
+    call = {"ferrograd": ferrograd_workflow, "numpy": numpy_workflow,
+            "rliable": rliable_workflow}[name]
+    points, bounds = [], []
+    for scores in data.values():
+        for operation in ("aggregates", "profile-score", "profile-task"):
+            point, interval = call(operation, scores, **kwargs)
+            points.extend(np.ravel(point))
+            bounds.extend(np.asarray(interval).T.tolist())
+    for left, right in (("spr", "drq"), ("spr", "iris"), ("drq", "iris")):
+        point, interval = call("compare", (data[left], data[right]), **kwargs)
+        points.extend(np.ravel(point))
+        bounds.extend(np.asarray(interval).T.tolist())
+    return np.asarray(points), np.asarray(bounds).T
+
+
 def backend(name):
     if name == 'ferrograd':
         from ferrograd import get_interval_estimates
@@ -96,6 +134,34 @@ def cpu_policy():
 
 def child(args):
     os.sched_setaffinity(0, cpu_policy()[:args.threads])
+    if args.operation != "iqm":
+        data = workflow_data(args.operation, args.case)
+        call = (lambda operation, data, **kwargs: complete_workflow(args.backend, data, **kwargs)
+                if operation == "workflow" else
+                {"ferrograd": ferrograd_workflow, "numpy": numpy_workflow,
+                 "rliable": rliable_workflow}[args.backend](operation, data, **kwargs))
+        kwargs = dict(reps=args.reps, seed=42, thresholds=np.linspace(0, 3, args.thresholds),
+                      task_bootstrap=args.task_bootstrap)
+        if args.backend == "ferrograd":
+            kwargs["threads"] = args.threads
+        baseline = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        if args.memory:
+            call(args.operation, data, **kwargs)
+            print(json.dumps(dict(peak_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                                  baseline_rss_kib=baseline)))
+            return
+        call(args.operation, data, **kwargs)
+        samples = []
+        for _ in range(5):
+            start = time.perf_counter()
+            result = call(args.operation, data, **kwargs)
+            samples.append(time.perf_counter() - start)
+        print(json.dumps(dict(seconds=samples, median=statistics.median(samples),
+                              minimum=min(samples), maximum=max(samples),
+                              point=np.asarray(result[0]).tolist(),
+                              interval=np.asarray(result[1]).tolist(),
+                              affinity=sorted(os.sched_getaffinity(0)))))
+        return
     scores = load(args.case)
     call = backend(args.backend)
     kwargs = dict(reps=args.reps, seed=42)
@@ -130,6 +196,10 @@ def main():
     parser.add_argument('--child', action='store_true')
     parser.add_argument('--memory', action='store_true')
     parser.add_argument('--scaling', action='store_true', help='Ferrograd 2/4-thread matrix')
+    parser.add_argument('--operation', choices=['iqm', 'aggregates', 'profile-score',
+                                                'profile-task', 'compare', 'workflow'], default='iqm')
+    parser.add_argument('--thresholds', type=int, choices=[25, 121], default=25)
+    parser.add_argument('--task-bootstrap', action='store_true')
     args = parser.parse_args()
     if args.child:
         child(args)
@@ -144,7 +214,9 @@ def main():
                                    for p in [HERE/'run.py', HERE.parent/'src'/'lib.rs',
                                              HERE.parent/'Cargo.lock',
                                              HERE.parent/'python/ferrograd/__init__.py',
-                                             *sorted((HERE/'data').glob('*.npy'))]})
+                                             HERE/'workflows.py',
+                                             *sorted((HERE/'data').glob('*.npy')),
+                                             *sorted((HERE/'data').glob('*.json'))]})
     metadata_path = args.output.with_suffix('.metadata.json')
     metadata['cpu_policy'] = cpu_policy()
     metadata['cpu_policy_description'] = 'one logical CPU per physical core, descending maximum frequency then ascending CPU ID'
@@ -156,27 +228,49 @@ def main():
     else:
         metadata_path.write_text(json.dumps(metadata, indent=2)+'\n')
     existing = [json.loads(line) for line in args.output.read_text().splitlines()] if args.output.exists() else []
-    done = {(x['case'], x['backend'], x['reps'], x['threads']) for x in existing}
+    done = {(x['case'], x['backend'], x['reps'], x['threads'],
+             x.get('operation', 'iqm'), x.get('thresholds'), x.get('task_bootstrap', False))
+            for x in existing}
     cases = [f'{d}_{r}_{t}' for r,t in [(5,26), (20,26), (100,100)]
              for d in ['normal', 'tied', 'heavy']]
     if (HERE/'data'/'atari_spr.npy').exists():
         cases.insert(0, 'atari_spr')
-    if args.case:
+    if args.operation != 'iqm':
+        cases = ([args.case] if args.case else
+                 (['spr-drq', 'spr-iris'] if args.operation == 'compare' else
+                  ['all'] if args.operation == 'workflow' else ['spr', 'drq', 'iris']))
+    elif args.case:
         cases = [args.case]
     for case in cases:
         for reps in ([args.reps] if args.reps else [2000, 50000]):
             for name in ([args.backend] if args.backend else (['ferrograd'] if args.scaling else ['rliable', 'numpy', 'ferrograd'])):
                 for threads in ([2,4] if args.scaling else [args.threads]):
-                    key = (case, name, reps, threads)
+                    key = (case, name, reps, threads, args.operation,
+                           args.thresholds if (args.operation.startswith('profile-') or
+                                               args.operation == 'workflow') else None,
+                           args.task_bootstrap)
                     if key in done:
                         continue
                     command = [sys.executable, str(Path(__file__).resolve()), '--child', '--case', case,
-                               '--backend', name, '--reps', str(reps), '--threads', str(threads)]
+                               '--backend', name, '--reps', str(reps), '--threads', str(threads),
+                               '--operation', args.operation, '--thresholds', str(args.thresholds)]
+                    if args.task_bootstrap:
+                        command.append('--task-bootstrap')
                     print(f'Running {key}', flush=True)
                     timing = json.loads(subprocess.check_output(command, text=True))
                     memory = json.loads(subprocess.check_output(command+['--memory'], text=True))
-                    row = dict(case=case, shape=list(load(case).shape), backend=name,
-                               reps=reps, threads=threads, **timing, **memory)
+                    loaded = workflow_data(args.operation, case) if args.operation != 'iqm' else load(case)
+                    shape = ({key: list(value.shape) for key, value in loaded.items()}
+                             if isinstance(loaded, dict) else
+                             [list(value.shape) for value in loaded] if isinstance(loaded, tuple) else
+                             list(loaded.shape))
+                    row = dict(case=case, shape=shape, backend=name, reps=reps, threads=threads,
+                               operation=args.operation,
+                               thresholds=args.thresholds if (args.operation.startswith('profile-') or
+                                                             args.operation == 'workflow') else None,
+                               threshold_range=[0.0, 3.0] if (args.operation.startswith('profile-') or
+                                                             args.operation == 'workflow') else None,
+                               task_bootstrap=args.task_bootstrap, **timing, **memory)
                     with args.output.open('a') as stream:
                         stream.write(json.dumps(row)+'\n')
                         stream.flush()

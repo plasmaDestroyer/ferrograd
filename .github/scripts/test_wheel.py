@@ -17,9 +17,11 @@ python = Path('.wheel-test') / ('Scripts/python.exe' if os.name == 'nt' else 'bi
 if '--reference' in sys.argv:
     run(python, '-m', 'pip', 'install', '-r', 'benchmarks/reference-requirements.txt')
     run(python, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py')
+    run(python, '-m', 'unittest', 'discover', '-s', 'benchmarks', '-p', 'test_*.py')
     with tempfile.TemporaryDirectory() as output:
         run(python.resolve(), Path('examples/plot_comparison.py').resolve(),
             cwd=output, env={**os.environ, 'MPLBACKEND': 'Agg'})
+        run(python, 'examples/atari_analysis.py', '--output', output)
 else:
     venv.create(python.parent.parent, with_pip=True)
     wheels = glob.glob('dist/*.whl')

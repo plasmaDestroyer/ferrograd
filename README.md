@@ -1,6 +1,7 @@
 # Ferrograd
 
-Rust-backed bootstrap statistics for reinforcement-learning benchmark scores.
+Fast, reproducible analysis of reinforcement-learning benchmark scores, with a
+notebook-first walkthrough and Rust-backed bootstrap statistics.
 Version 0.1 handles finite, two-dimensional final-score arrays shaped
 `(runs, tasks)`. It is not an automatic differentiation engine; the older
 design is preserved in [the historical specification](docs/HISTORICAL_AUTODIFF_SPEC.md).
@@ -8,11 +9,14 @@ design is preserved in [the historical specification](docs/HISTORICAL_AUTODIFF_S
 ## Install
 
 Requires CPython 3.11–3.14 and NumPy 2.x. CI wheel jobs target Linux
-x86-64, macOS Intel and Apple Silicon, and Windows x86-64. Build locally with:
+x86-64, macOS Intel and Apple Silicon, and Windows x86-64. Install a wheel
+downloaded from the matching CI artifact (no package-index publication is claimed):
 
 ```sh
-python -m pip install .
+python -m pip install path/to/ferrograd-0.1.0-*.whl
 ```
+
+For a source build with a Rust toolchain, use `python -m pip install .`.
 
 For benchmark/reference tests, use Python 3.12 and install
 `benchmarks/reference-requirements.txt`. The runtime package depends only on
@@ -47,7 +51,7 @@ percentile limits. `examples/plot_comparison.py` shows direct use with
 `rliable.plot_utils` when plotting is needed.
 
 For a complete real-data walkthrough, see [published Atari analysis](docs/atari-analysis/README.md)
-with reproducible results and plots from 100 SPR runs across 26 games.
+with SPR, DrQ (epsilon), and IRIS on the same 26 games (100/100/5 runs).
 
 ## Statistics and boundaries
 
@@ -78,6 +82,13 @@ contract and stop/go evidence are in [SPEC.md](SPEC.md) and the
 batched NumPy gates at 6.28× and 2.29×, respectively. The earlier
 [partition gate](benchmarks/PARTITION_REPORT.md) and
 [sorting baseline](benchmarks/REPORT.md) remain as historical evidence.
+
+The measured 2,000-repetition, 121-threshold full workflow took 0.710 seconds
+with Ferrograd, 2.265 seconds with bounded-memory NumPy, and 47.650 seconds
+with rliable. This covers the recorded Atari workflow only; see the
+[workflow benchmark](benchmarks/WORKFLOW_REPORT.md) for scope and raw evidence.
+See the [coverage study](benchmarks/COVERAGE_REPORT.md) for interval-calibration
+experiments and their limits.
 
 ## License
 

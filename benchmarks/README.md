@@ -22,6 +22,7 @@ uv pip install --python .venv-reference/bin/python target/wheels/ferrograd-0.1.0
 flock benchmarks/results/local.lock .venv-reference/bin/python benchmarks/run.py --output benchmarks/results/local.jsonl
 flock benchmarks/results/local.lock .venv-reference/bin/python benchmarks/run.py --output benchmarks/results/local.jsonl --scaling
 .venv-reference/bin/python benchmarks/coverage.py
+flock benchmarks/results/experiment.lock .venv-reference/bin/python benchmarks/coverage_study.py
 cargo run --release --example profile_iqm > benchmarks/results/profile.txt
 ```
 
@@ -73,6 +74,11 @@ nominal interval level. They use their own deterministic bootstrap RNG streams,
 so their interval endpoints need not match sample for sample.
 
 See [REPORT.md](REPORT.md) for results and the continuation verdict.
+
+The historical `coverage.py` check remains reproducible as originally run.
+The larger symmetric-model study is reported separately in
+[COVERAGE_REPORT.md](COVERAGE_REPORT.md); its JSONL writer resumes completed
+trial/backend rows and must use the shared `results/experiment.lock` lock.
 
 The focused partition gate is reported in [PARTITION_REPORT.md](PARTITION_REPORT.md),
 using [partition-gate.jsonl](results/partition-gate.jsonl) and its
