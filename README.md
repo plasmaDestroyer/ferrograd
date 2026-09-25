@@ -24,6 +24,9 @@ NumPy; reference packages and plotting packages are optional.
 
 ## Use
 
+For your own experiments, start with the [trial guide](docs/TRIAL_GUIDE.md):
+installation, score preparation, a runnable comparison, and interpreting results.
+
 ```python
 import numpy as np
 import ferrograd
